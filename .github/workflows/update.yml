@@ -1,0 +1,48 @@
+name: 更新数据
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: update
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: 循环更新（约每 3 分钟一次，跑 5 小时 40 分后自动接力）
+        env:
+          MAX_SECONDS: "150"
+        run: |
+          git config user.name "agentic-watch-bot"
+          git config user.email "agentic-watch-bot@users.noreply.github.com"
+          end=$((SECONDS + 20400))
+          i=0
+          while [ $SECONDS -lt $end ]; do
+            start=$SECONDS
+            i=$((i+1))
+            git fetch -q --depth 1 origin main && git checkout -q FETCH_HEAD -- . ':(exclude)data' || true
+            python updater.py || echo "本轮更新出错，下轮再试"
+            git checkout -q --orphan "p$i"
+            git add -A
+            git commit -q -m "数据更新 $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push -q -f origin "p$i:main" || echo "推送失败，下轮再试"
+            left=$((180 - (SECONDS - start)))
+            if [ $left -gt 0 ]; then sleep $left; fi
+          done
+      - name: 接力下一轮
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update.yml --ref main -R ${{ github.repository }} || true
