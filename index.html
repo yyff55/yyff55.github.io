@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Agentic Watch · Agent ID Mint 监控</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="币安 Agent ID（.ai）钱包 Mint 监控：新项目、免费/付费、mint 进度、项目方、合约安全检查。只读，不连接钱包。">
+<style>
+:root{--bg:#0f1115;--card:#171a21;--line:#262b36;--txt:#e7e9ee;--mut:#8a93a6;--y:#f0b90b;--g:#22c55e;--r:#ef4444;--b:#60a5fa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+h1{font-size:18px;margin:0;color:var(--y)}.stat{color:var(--mut);font-size:13px}.stat b{color:var(--txt)}
+main{display:flex;flex-direction:column;gap:14px;padding:14px 16px;max-width:1500px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card h2{margin:0;padding:11px 14px;font-size:15px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.card h2 span{color:var(--mut);font-weight:400;font-size:12px}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-weight:400;font-size:12px;color:var(--mut)}
+.scroll{max-height:520px;overflow:auto}
+table{width:100%;border-collapse:collapse}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--mut);font-weight:500;font-size:12px;position:sticky;top:0;background:var(--card);z-index:1}
+td.n{text-align:right;font-variant-numeric:tabular-nums}.g{color:var(--g)}.r{color:var(--r)}.m{color:var(--mut)}.yy{color:#fbbf24}
+.addr{font-family:Consolas,monospace;font-size:12px;color:var(--mut)}
+.cp{background:var(--y);color:#000;border:0;border-radius:5px;padding:2px 8px;font-size:12px;font-weight:600;cursor:pointer}
+.lk{color:var(--b);text-decoration:none;font-size:12px}.lk:hover{text-decoration:underline}
+.sel,.inp{background:#0b1220;color:inherit;border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.ck{background:#1e3a8a;color:#bfdbfe;border:0;border-radius:5px;padding:3px 9px;font-size:12px;cursor:pointer}
+.btn{background:var(--y);color:#000;border:0;border-radius:6px;padding:7px 16px;font-weight:600;cursor:pointer}
+.wp{color:#facc15;font-size:12px;cursor:pointer;text-decoration:underline}
+.win button{background:#0b1220;color:var(--txt);border:1px solid var(--line);padding:3px 10px;border-radius:6px;cursor:pointer;font-size:12px}
+.win button.on{background:var(--y);color:#000;border-color:var(--y);font-weight:600}
+.lv{display:inline-block;min-width:22px;text-align:center;border-radius:4px;padding:1px 6px;font-weight:700;margin-right:6px}
+.lv-高{background:#7f1d1d;color:#fecaca}.lv-中{background:#713f12;color:#fde68a}.lv-低{background:#14532d;color:#bbf7d0}.lv-\?{background:#3f3f46}
+.bar{height:5px;background:#1f2937;border-radius:3px;margin-top:3px}.bar i{display:block;height:5px;border-radius:3px;background:var(--g)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--g);color:#000;padding:8px 18px;border-radius:8px;font-weight:600;opacity:0;transition:.2s;pointer-events:none;z-index:30}
+#toast.show{opacity:1}.empty{padding:24px;text-align:center;color:var(--mut)}
+#mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20}
+#modal{max-width:760px;margin:5vh auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;max-height:88vh;overflow:auto}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#555;margin-right:5px}.dot.on{background:var(--g);box-shadow:0 0 6px var(--g)}
+footer{color:var(--mut);font-size:12px;text-align:center;padding:10px 16px 24px}
+</style></head><body>
+<header><h1>Agentic Watch</h1>
+<div class="stat">Agentic 钱包 <b id="nw">…</b> · 有 mint 记录 <b id="nm">…</b> · 项目 <b id="np">…</b></div>
+<div class="stat">数据更新于 <b id="upd">…</b></div>
+<div class="stat"><span class="dot" id="ldot"></span><span id="lst">实时监控未开启</span> <button class="ck" id="lbtn">开启实时</button></div>
+</header>
+<main>
+<section class="card"><h2>🔎 输入官网或合约地址查 mint 信息 <span>合约地址、免费还是付费、mint 进度、项目方</span></h2>
+<div style="display:flex;gap:8px;padding:10px 14px"><input id="su" class="inp" style="flex:1;padding:8px 10px" placeholder="粘贴项目官网（如 https://halcyx-ai.pages.dev/）或合约地址 0x…"><button class="btn" id="sbtn">查询</button></div>
+<div id="sres" style="padding:0 0 6px"></div><div style="padding:0 14px 10px"><button class="btn" id="aibtn">🤖 AI 结论（DeepSeek）</button> <span class="m">先点「查询」，再点这里，约 10~40 秒</span><div id="aires" style="white-space:pre-wrap;margin-top:8px;line-height:1.6"></div></div></section>
+
+<section class="card"><h2>📚 最近新出的项目 <span class="ctl">
+<select id="hh" class="sel"><option value="24">最近 1 天</option><option value="72">最近 3 天</option><option value="168">最近 7 天</option><option value="99999">全部</option></select>
+<select id="hf" class="sel"><option value="">免费+付费</option><option value="免费">只看免费</option><option value="付费">只看付费</option></select>
+<select id="hs" class="sel"><option value="f">最新上线</option><option value="w">参与钱包最多</option><option value="pct">进度最快</option><option value="l">最近 mint</option></select>
+<select id="hv" class="sel"><option value="">开源+未开源</option><option value="1">只看开源</option><option value="0">只看未开源</option></select>
+<label><input type="checkbox" id="hsite"> 有官网</label><label><input type="checkbox" id="hx"> 有推特</label><label><input type="checkbox" id="hdev"> 只看首发项目方</label>
+<input id="hq" class="inp" placeholder="搜项目名 / 合约" style="width:150px"> <b id="hn"></b></span></h2>
+<div class="scroll" style="max-height:560px"><table><thead><tr><th>#</th><th>项目</th><th>免费/付费</th><th>mint 进度</th><th class="n">参与钱包</th><th>项目方</th><th>上线</th><th>最近 mint</th><th>官网</th><th>官方 X</th><th>合约安全</th></tr></thead><tbody id="hist"><tr><td colspan="11" class="empty">加载中…</td></tr></tbody></table></div></section>
+
+
+
+<section class="card"><h2>⚡ 实时 Mint 动态 <span class="ctl"><select id="ff" class="sel"><option value="">全部</option><option value="免费">免费</option><option value="付费">付费</option></select><label><input type="checkbox" id="fsite"> 有官网</label><label><input type="checkbox" id="fx"> 有推特</label><label><input type="checkbox" id="fv"> 只看开源</label> <b id="fn"></b></span></h2>
+<div class="scroll" style="max-height:460px"><table><thead><tr><th>时间</th><th>钱包</th><th>项目</th><th class="n">数量</th><th>花费</th><th>官网</th><th>合约</th><th>交易</th></tr></thead><tbody id="feed"></tbody></table></div></section>
+
+<section class="card"><h2>🎨 Agentic 钱包都在 Mint 什么 <span class="ctl win" id="win"><button data-m="60">1 小时</button><button data-m="360" class="on">6 小时</button><button data-m="1440">24 小时</button></span></h2>
+<div class="scroll"><table><thead><tr><th>#</th><th>项目</th><th>官网</th><th>合约</th><th class="n">mint 钱包</th><th class="n">数量</th><th class="n">共花 BNB</th><th>最近</th><th>合约安全</th></tr></thead><tbody id="mint"></tbody></table></div></section>
+<section class="card"><h2>🏆 打 Mint 最多的 Agentic 钱包 <span>按打过的项目数排序（10 月 19 日起）</span></h2>
+<div class="scroll" style="max-height:380px"><table><thead><tr><th>#</th><th>钱包</th><th class="n">打过项目</th><th>最近打的</th><th>最近</th><th></th></tr></thead><tbody id="topw"></tbody></table></div></section>
+</main>
+<footer>只读链上公开数据，不连接钱包、不签名、不花钱。合约检查是自动扫描，不等于专业审计。数据由 GitHub Actions 每 10 分钟更新。</footer>
+<div id="toast">已复制</div>
+<div id="mask"><div id="modal"></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sh=a=>a?a.slice(0,6)+'…'+a.slice(-4):'';
+const cbtn=c=>c?`<button class="cp" data-copy="${c}">复制</button> <span class="addr">${sh(c)}</span>`:'';
+const fmtT=m=>{if(!m)return '';const d=new Date(m*60000);return (d.getMonth()+1)+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const fmtS=t=>{const d=new Date(t*1000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0')};
+const ago=t=>{const s=Math.max(0,Date.now()/1000-t);return s<90?Math.round(s)+' 秒前':s<5400?Math.round(s/60)+' 分钟前':Math.round(s/3600)+' 小时前'};
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1200)}
+function modal(h){$('modal').innerHTML=h+'<div style="text-align:right;margin-top:14px"><button class="ck" onclick="$(\'mask\').style.display=\'none\'">关闭</button></div>';$('mask').style.display='block'}
+$('mask').onclick=e=>{if(e.target.id==='mask')$('mask').style.display='none'};
+
+// ---------------------------------------------------------------- RPC
+const RPCS=['https://bsc-rpc.publicnode.com','https://bsc-dataseed.bnbchain.org','https://rpc-bsc.48.club','https://bsc-dataseed1.binance.org','https://bsc.drpc.org'];
+const LOGRPC=['https://rpc-bsc.48.club','https://bsc.drpc.org'];
+const WRPC='https://agentic-rpc.yf15082354568.workers.dev';
+let rpcI=0;
+async function rpc(m,p,urls=RPCS,tries=6){let last;for(let k=0;k<tries;k++){const u=k===0?WRPC:urls[(rpcI+k)%urls.length];try{const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});const j=await r.json();if('result' in j)return j.result;last=j.error;if(j.error&&/revert/i.test(j.error.message||''))throw new Error('revert')}catch(e){last=e;if(String(e).includes('revert'))throw e}rpcI++;await new Promise(r=>setTimeout(r,300+k*300))}throw new Error(m+' 失败 '+JSON.stringify(last||'').slice(0,100))}
+const pad=(h,n=64)=>h.padStart(n,'0');
+const hx=n=>n.toString(16);
+function decStr(h){try{h=h.replace(/^0x/,'');if(h.length>=128&&parseInt(h.slice(0,64),16)===32){const n=parseInt(h.slice(64,128),16);h=h.slice(128,128+n*2)}else h=h.replace(/(00)+$/,'');const b=new Uint8Array(h.match(/../g)?.map(x=>parseInt(x,16))||[]);return new TextDecoder().decode(b).replace(/\0/g,'')}catch(e){return ''}}
+async function multicall(calls){const out=[];for(let i=0;i<calls.length;i+=120){const ch=calls.slice(i,i+120);const el=ch.map(([t,cd])=>{cd=cd.replace(/^0x/,'');const L=cd.length/2;return pad(t.slice(2))+pad('1')+pad('60')+pad(hx(L))+cd+'0'.repeat((64-(cd.length%64))%64)});let head='',tail='',off=32*el.length;for(const e of el){head+=pad(hx(off));tail+=e;off+=e.length/2}
+ const data='0x82ad56cb'+pad('20')+pad(hx(el.length))+head+tail;let res;try{res=(await rpc('eth_call',[{to:'0xca11bde05977b3631167028862be2a173976ca11',data},'latest'])).slice(2)}catch(e){out.push(...ch.map(()=>null));continue}
+ const W=k=>parseInt(res.slice(k*2,k*2+64),16);const n=W(32);for(let k=0;k<n;k++){const o=64+W(64+32*k);const ok=W(o);const ro=o+W(o+32);const ln=W(ro);out.push(ok?res.slice((ro+32)*2,(ro+32+ln)*2):null)}}return out}
+const U=h=>h&&h.length>=64?BigInt('0x'+h.slice(0,64)):null;
+const SEL_SUP=['18160ddd','a2309ff8','75794a3c','96d40e96','3a98ef39','9106d7ba'],SEL_MAX=['d5abeb01','32cb6b0c','45c0f533','355274ea','f47c84c5','e8315742','902d55a5','8f770ad0','008a7848','3e8ff57b'],SEL_PR=['6817c76c','a035b1fe','c002d23d','13faede6','8d859f3e','a945bf80','13966db5','d7bf81a3','7b1b1de6','f51f96dd','9b6860c8'],SEL_PER=['453c2310','0f2cdd6c','b228d925','29231c73','0eb9e3cd','17674c1f','46668c09'];
+const SELS=['06fdde03','8da5cb5b','01ffc9a7'+'80ac58cd'.padEnd(64,'0'),...SEL_SUP,...SEL_MAX,...SEL_PR,...SEL_PER];
+async function mintInfos(cs){const res=await multicall(cs.flatMap(c=>SELS.map(s=>[c,'0x'+s])));const out={};cs.forEach((c,k)=>{const r=res.slice(k*SELS.length,(k+1)*SELS.length);if(r.every(x=>x===null)){out[c]=null;return}let j=3;
+ const first=(arr,f)=>{for(const x of arr){const v=U(x);if(v!==null&&f(v))return v}return null};
+ let sup=first(r.slice(j,j+SEL_SUP.length),v=>true);j+=SEL_SUP.length;let mx=first(r.slice(j,j+SEL_MAX.length),v=>v>0n&&v<10n**12n);j+=SEL_MAX.length;const pr=first(r.slice(j,j+SEL_PR.length),v=>v<10n**24n);j+=SEL_PR.length;const per=first(r.slice(j),v=>v>0n&&v<10n**6n);
+ let ow=r[1]&&r[1].length>=64?'0x'+r[1].slice(24,64):'';if(/^0x0{40}$/.test(ow)||ow==='0x000000000000000000000000000000000000dead')ow='';
+ let tok=false;if(sup!==null&&sup>10n**15n){tok=true;sup=sup/10n**18n;if(mx&&mx>10n**15n)mx=mx/10n**18n}
+ out[c]={nm:r[0]?decStr(r[0]).slice(0,40):'',o:ow,nft:U(r[2])===1n,tok,su:sup===null?null:Number(sup),mx:mx===null?null:Number(mx),pr:pr===null?null:Number(pr)/1e18,pw:per===null?null:Number(per)}});return out}
+
+// ---------------------------------------------------------------- 数据
+let META={},PROJ=[],PMAP={},FEED=[],TOPW=[],CONTRACTS=null,OWNC={};
+const cacheKey=()=>META.t||Date.now();
+async function getJ(p){const r=await fetch('data/'+p+'?v='+cacheKey());return r.json()}
+async function loadAll(){try{META=await (await fetch('data/meta.json?t='+Date.now())).json()}catch(e){}
+ $('nw').textContent=(META.wallets||0).toLocaleString();$('nm').textContent=(META.minters||0).toLocaleString();$('np').textContent=(META.projects||0).toLocaleString();$('upd').textContent=META.t?ago(META.t):'—';
+ [PROJ,FEED,TOPW]=await Promise.all([getJ('projects.json'),getJ('feed.json'),getJ('topw.json')]);
+ PMAP={};OWNC={};for(const p of PROJ){PMAP[p.c]=p;if(p.o)OWNC[p.o]=(OWNC[p.o]||0)+1}
+ FEED=FEED.concat(LIVE.filter(e=>!FEED.some(f=>f.h===e.h&&f.c===e.c))).sort((a,b)=>b.t-a.t);
+ drawHist();drawTop();drawFeed();drawMint()}
+setInterval(()=>{if(META.t)$('upd').textContent=ago(META.t)},20000);
+setInterval(loadAll,2*60000);
+
+// ---------------------------------------------------------------- 单元格
+function fpTag(p){if(!p||!p.fr||p.fr==='未知')return '<span class="m">未知</span>';if(p.fr==='免费')return '<b class="g">免费</b>';return `<b class="yy">付费</b> <span class="m">${p.pr!=null?(+p.pr).toString()+' BNB':''}</span>`}
+function progCell(p){if(!p||p.su==null)return '<span class="m">—</span>';const pct=p.mx?Math.min(100,p.su*100/p.mx):null;return `<div style="min-width:120px">${p.su.toLocaleString()} / ${p.mx?p.mx.toLocaleString():'不限'}${pct!=null?' · '+pct.toFixed(1)+'%':''}${pct!=null?`<div class="bar"><i style="width:${pct}%;${pct>=100?'background:#ef4444':''}"></i></div>`:''}</div>`}
+function devCell(p){if(!p||p.o===undefined||p.o===null)return '<span class="m">—</span>';if(!p.o)return '<span class="m">无/已放弃</span>';const n=OWNC[p.o]||1;if(n>=31)return `<a class="wp" data-dev="${p.o}" style="color:#fb923c" title="同一地址发了很多项目，多半是发射平台/批量发行">平台批量 ${n} 个</a>`;return n>1?`<a class="wp" data-dev="${p.o}" style="color:#f87171">发过 ${n-1} 个</a>`:`<a class="wp" data-dev="${p.o}" style="color:#4ade80">首发</a>`}
+const siteCell=p=>p&&p.s?`<a class="lk" target="_blank" rel="noopener" href="${esc(p.s)}">官网</a>`:'<span class="m">—</span>';
+const xCell=p=>p&&p.x?`<a class="lk" target="_blank" rel="noopener" href="${esc(p.x)}">官方 X</a>`:`<a class="lk" target="_blank" rel="noopener" href="https://x.com/search?q=${p?p.c:''}&f=live">X 搜合约</a>`;
+const vTag=p=>p&&p.v===1?'<span class=g style="font-size:12px">开源</span>':(p&&p.v===0?'<span class=r style="font-size:12px">未开源</span>':'<span class=m style="font-size:12px">待查</span>');
+const ckBtn=(c,n)=>`<button class="ck" data-check="${c}" data-name="${esc(n||'')}">一键检查</button>`;
+const wCell=(w,n)=>`<span data-copy="0x${w}" style="cursor:pointer" title="点击复制">${n?'<b>'+esc(n)+'</b>':'<span class=addr>'+sh('0x'+w)+'</span>'}</span> <a class="wp" data-wal="${w}">看项目</a>`;
+
+// ---------------------------------------------------------------- 新项目
+function drawHist(){const now=Date.now()/60000,h=+$('hh').value,q=$('hq').value.trim().toLowerCase(),f=$('hf').value,k=$('hs').value;
+ let L=PROJ.filter(p=>p.f&&now-p.f<=h*60&&(!q||p.n.toLowerCase().includes(q)||p.c.includes(q))&&(!f||p.fr===f)&&(!$('hsite').checked||p.s)&&(!$('hx').checked||p.x)&&(!$('hdev').checked||(p.o&&OWNC[p.o]===1))&&($('hv').value===''||(p.v===+$('hv').value)));
+ const pct=p=>p.mx&&p.su!=null?p.su/p.mx:0;
+ L.sort(k==='w'?(a,b)=>b.w-a.w:k==='pct'?(a,b)=>pct(b)-pct(a):k==='l'?(a,b)=>b.l-a.l:(a,b)=>b.f-a.f);
+ $('hn').textContent='共 '+L.length+' 个';
+ $('hist').innerHTML=L.length?L.slice(0,500).map((p,i)=>`<tr><td class="m">${i+1}</td><td><b>${esc(p.n)}</b><br>${cbtn(p.c)}</td><td>${fpTag(p)}</td><td>${progCell(p)}</td><td class="n g">${p.w.toLocaleString()}</td><td>${devCell(p)}</td><td class="m">${fmtT(p.f)}</td><td class="m">${fmtT(p.l)}</td><td>${siteCell(p)}</td><td>${xCell(p)}</td><td>${vTag(p)} ${ckBtn(p.c,p.n)}</td></tr>`).join(''):'<tr><td colspan="11" class="empty">这个条件下没有项目</td></tr>'}
+['hh','hf','hs','hv','hsite','hx','hdev'].forEach(id=>$(id).onchange=drawHist);$('hq').oninput=drawHist;
+
+// ---------------------------------------------------------------- 钱包排行
+function drawTop(){$('topw').innerHTML=TOPW.map((x,i)=>`<tr><td class="m">${i+1}</td><td>${wCell(x.w,x.n)}</td><td class="n g"><b>${x.k}</b></td><td class="m" style="white-space:normal;min-width:260px">${esc(x.p.slice(0,5).join('、'))}${x.p.length>5?' …':''}</td><td class="m">${fmtT(x.l)}</td><td><a class="lk" target="_blank" href="https://bscscan.com/address/0x${x.w}">BscScan</a></td></tr>`).join('')}
+
+// ---------------------------------------------------------------- 动态 & 排行
+function drawFeed(){const ff=$('ff').value,fs=$('fsite').checked,fx=$('fx').checked,fv=$('fv').checked;const L=FEED.filter(e=>{const p=PMAP[e.c]||{};if(ff==='免费'&&!(e.b===0||(e.b==null&&p.fr==='免费')))return false;if(ff==='付费'&&!(e.b>0||(e.b==null&&p.fr==='付费')))return false;if(fs&&!p.s)return false;if(fx&&!p.x)return false;if(fv&&p.v!==1)return false;return true});$('fn').textContent=(ff||fs||fx||fv)?'筛出 '+L.length+' 条':'';$('feed').innerHTML=L.slice(0,150).map(e=>{const p=PMAP[e.c]||{c:e.c};return `<tr><td class="m">${fmtS(e.t)}</td><td>${wCell(e.w,e.wn||HOLD.get(e.w)||'')}</td><td><b>${esc(p.n||e.n||sh(e.c))}</b></td><td class="n">${e.k}</td><td>${e.b?'<span class=yy>'+e.b+' BNB</span>':(e.b===0?'<span class=g>免费</span>':'<span class=m>…</span>')}</td><td>${siteCell(p)}</td><td>${cbtn(e.c)}</td><td><a class="lk" target="_blank" href="https://bscscan.com/tx/${e.h}">查看</a></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">暂无（可放宽筛选）</td></tr>'}
+['ff','fsite','fx','fv'].forEach(id=>$(id).onchange=drawFeed);
+let WIN=360;$('win').onclick=e=>{const b=e.target.closest('button');if(!b)return;WIN=+b.dataset.m;[...$('win').children].forEach(x=>x.classList.toggle('on',x===b));drawMint()};
+function drawMint(){const cut=Date.now()/1000-WIN*60,M={};for(const e of FEED){if(e.t<cut)continue;const d=M[e.c]||(M[e.c]={w:new Set(),n:0,b:0,l:0});d.w.add(e.w);d.n+=e.k;d.b+=e.b||0;d.l=Math.max(d.l,e.t)}
+ const L=Object.entries(M).sort((a,b)=>b[1].w.size-a[1].w.size).slice(0,100);
+ $('mint').innerHTML=L.map(([c,d],i)=>{const p=PMAP[c]||{c};return `<tr><td class="m">${i+1}</td><td><b>${esc(p.n||sh(c))}</b></td><td>${siteCell(p)}</td><td>${cbtn(c)}</td><td class="n g">${d.w.size}</td><td class="n">${d.n}</td><td class="n">${d.b?d.b.toFixed(4):'免费'}</td><td class="m">${fmtS(d.l)}</td><td>${ckBtn(c,p.n)}</td></tr>`}).join('')||'<tr><td colspan="9" class="empty">这个时间段还没有数据</td></tr>'}
+
+// ---------------------------------------------------------------- 实时监控（浏览器直接读链）
+const HOLD=new Map();let LIVE=[],liveOn=false,liveBlock=0;
+async function startLive(){if(liveOn)return;liveOn=true;$('lbtn').style.display='none';$('lst').textContent='正在下载钱包名单（约 8MB）…';
+ try{const t=await (await fetch('data/holders.txt?v='+cacheKey())).text();for(const line of t.split('\n')){const i=line.indexOf(' ');if(i===40)HOLD.set(line.slice(0,40),line.slice(41))}}catch(e){$('lst').textContent='名单下载失败，刷新重试';liveOn=false;$('lbtn').style.display='';return}
+ liveBlock=parseInt(await rpc('eth_blockNumber',[]),16)-3;$('ldot').classList.add('on');$('lst').textContent='实时监控中';liveLoop()}
+async function liveLoop(){const T='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',Z='0x'+'0'.repeat(64);
+ while(liveOn){try{const head=parseInt(await rpc('eth_blockNumber',[]),16)-1;if(head>liveBlock){const to=Math.min(head,liveBlock+60);
+  const logs=await rpc('eth_getLogs',[{topics:[T,Z],fromBlock:'0x'+hx(liveBlock+1),toBlock:'0x'+hx(to)}],LOGRPC,4);const now=Date.now()/1000;const by={};
+  for(const x of logs){if(x.topics.length!==4)continue;const w=x.topics[2].slice(-40),c=x.address.toLowerCase();if(!HOLD.has(w)||c==='0x60b9262456de011f7d15a54cdd8c48baaa8b022f')continue;const key=x.transactionHash+c;(by[key]||(by[key]={t:now,w,c,k:0,b:null,h:x.transactionHash,wn:HOLD.get(w)})).k++}
+  const evs=Object.values(by);if(evs.length){LIVE=evs.concat(LIVE).slice(0,2000);FEED=evs.concat(FEED).slice(0,4000);drawFeed();drawMint();
+   evs.forEach(async e=>{try{const tx=await rpc('eth_getTransactionByHash',[e.h]);e.b=+(Number(BigInt(tx.value))/1e18).toFixed(6);drawFeed()}catch(_){}})}
+  liveBlock=to;$('lst').textContent='实时监控中 · 区块 '+to.toLocaleString()}}catch(e){$('lst').textContent='节点繁忙，自动重试…'}
+  await new Promise(r=>setTimeout(r,3000))}}
+$('lbtn').onclick=startLive;
+
+// ---------------------------------------------------------------- 官网 / 合约查询
+function hostOf(u){try{return new URL(u.startsWith('http')?u:'https://'+u).hostname.replace(/^www\./,'').toLowerCase()}catch(e){return ''}}
+async function siteQ(){const raw=$('su').value.trim();if(!raw)return;$('sres').innerHTML='<div class="empty">查询中…（10~30 秒）</div>';
+ let cands=[],how={},xfound='',siteUrl='';
+ const am=raw.match(/^0x[a-fA-F0-9]{40}$/);
+ if(am){cands=[raw.toLowerCase()];how[cands[0]]='合约地址'}
+ else{const h=hostOf(raw);siteUrl=raw.startsWith('http')?raw:'https://'+raw;
+  for(const p of PROJ){if(p.s&&hostOf(p.s)===h){cands.push(p.c);how[p.c]='项目目录'}}
+  try{const SA=await getJ('siteaddr.json');for(const [s,arr] of Object.entries(SA)){if(hostOf(s)===h)for(const a of arr.a||[]){if(!how[a]){cands.push(a);how[a]='官网代码'}}if(hostOf(s)===h&&arr.x)xfound=arr.x}}catch(e){}
+  let gotW=false;try{const r=await fetch(WRPC+'/site?u='+encodeURIComponent(siteUrl));const j=await r.json();if(j&&j.a){gotW=true;for(const a of j.a){if(!how[a]){cands.push(a);how[a]='官网代码'}}if(j.x&&!xfound)xfound=j.x}}catch(e){}
+  if(!gotW)try{const r=await fetch(siteUrl);const html=await r.text();for(const a of (html.match(/0x[a-fA-F0-9]{40}/g)||[])){const l=a.toLowerCase();if(!how[l]){cands.push(l);how[l]='官网代码'}}const xm=html.match(/https?:\/\/(?:www\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{2,15})(?![A-Za-z0-9_])/g);if(xm&&!xfound)xfound=xm.find(u=>!/\/(intent|share|home|i|search)$/.test(u))||''}catch(e){}}
+ const INFRA=new Set(['0x60b9262456de011f7d15a54cdd8c48baaa8b022f','0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c','0xca11bde05977b3631167028862be2a173976ca11','0x10ed43c718714eb63d5aa57b78b54704e256024e','0xca143ce32fe78f1f7019d7d551a6402fc5350c73','0x55d398326f99059ff775485246999027b3197955','0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d','0xe9e7cea3dedca5984780bafc599bd69add087d56','0x000000000000000000000000000000000000dead','0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee','0x13f4ea83d0bd40e75c8222255bc855a974568dd4','0x1b81d678ffb9c0263b24a97847620c99d213eb14','0x0567f2323251f0aab15c8dfb1967e4e8a7d42aee']);
+ cands=[...new Set(cands)].filter(a=>!INFRA.has(a)&&!/^0x0{30}/.test(a)&&!/^0x(.)\1{12}/.test(a)).slice(0,40);
+ if(!cands.length){$('sres').innerHTML='<div class="empty">没找到合约地址。可能是网站还没收录、或者要连钱包后才显示合约。可以直接把合约地址粘进来查。</div>';return}
+ let inf={};try{inf=await mintInfos(cands)}catch(e){}
+ const rest=cands.filter(c=>!(inf[c]&&(inf[c].nft||inf[c].su!=null)));const EX={};
+ try{const mc=await multicall(rest.flatMap(c=>[['0xca11bde05977b3631167028862be2a173976ca11','0x4d2301cc'+pad(c.slice(2))],[c,'0xc5c4744c'],[c,'0xf0ea4bfc'],[c,'0xfb86a404'],[c,'0x3a03171c'],[c,'0x8da5cb5b']]));
+  const codes=await Promise.all(rest.map(c=>rpc('eth_getCode',[c,'latest']).catch(()=>'')));
+  rest.forEach((c,k)=>{const r=mc.slice(k*6,k*6+6);if(!codes[k]||codes[k]==='0x')return;const bal=Number(U(r[0])||0n)/1e18;const rz=U(r[1])??U(r[2]);const hc=U(r[3])??U(r[4]);const sel=/(payable|buy|purchase|contribute|deposit|ieo|sale|presale)/i;
+   let ow=r[5]&&r[5].length>=64?'0x'+r[5].slice(24,64):'';if(/^0x0{40}$/.test(ow))ow='';
+   if(bal>=0.01||rz!=null)EX[c]={bal,rz:rz!=null?Number(rz)/1e18:null,hc:hc!=null?Number(hc)/1e18:null,o:ow}})}catch(e){}
+ const ieo=Object.entries(EX).map(([c,e])=>({c,n:(PMAP[c]||{}).n||sh(c),kind:'IEO/售卖',ieo:e,w:0,o:e.o,s:siteUrl,x:xfound,how:how[c]}));
+ const rows0=cands.filter(c=>inf[c]&&(inf[c].nft||inf[c].su!=null)).map(c=>{const i=inf[c],p=PMAP[c]||{};const o=i.o;
+  return {c,n:p.n||i.nm||sh(c),kind:i.nft?'NFT':(i.tok?'代币':'合约'),fr:p.fr&&p.fr!=='未知'?p.fr:(i.pr==null?'未知':(i.pr===0?'免费':'付费')),pr:p.fr&&p.fr!=='未知'?p.pr:i.pr,su:i.su,mx:i.mx,pw:i.pw,w:p.w||0,f:p.f,o,s:p.s||siteUrl,x:p.x||xfound,how:how[c]}});const rows=rows0.concat(ieo).sort((a,b)=>(b.kind==='NFT')-(a.kind==='NFT')||(b.kind==='IEO/售卖')-(a.kind==='IEO/售卖')||b.w-a.w).slice(0,12);
+ if(!rows.length){$('sres').innerHTML='<div class="empty">找到地址，但都不是 NFT、代币或售卖合约。</div>';return}
+ $('sres').innerHTML='<div class="scroll"><table><thead><tr><th>项目</th><th>类型</th><th>免费/付费</th><th>mint 进度</th><th class="n">每人上限</th><th class="n">参与 Agentic 钱包</th><th>项目方</th><th>上线</th><th>来源</th><th>官网</th><th>官方 X</th><th>合约安全</th></tr></thead><tbody>'+rows.map(x=>`<tr><td><b>${esc(x.n)}</b><br>${cbtn(x.c)}</td><td>${x.kind}</td><td>${x.ieo?'<b class=yy>付费</b>':fpTag(x)}</td><td>${x.ieo?(x.ieo.rz!=null?'募集 '+x.ieo.rz.toFixed(2)+(x.ieo.hc?' / '+x.ieo.hc.toFixed(2):'')+' BNB':'合约里 '+x.ieo.bal.toFixed(2)+' BNB'):progCell(x)}</td><td class="n">${x.pw||'—'}</td><td class="n g">${x.w.toLocaleString()}</td><td>${devCell(x)}</td><td class="m">${fmtT(x.f)||'—'}</td><td class="m">${x.how}</td><td>${siteCell(x)}</td><td>${xCell(x)}</td><td>${ckBtn(x.c,x.n)}</td></tr>`).join('')+'</tbody></table></div>'}
+$('sbtn').onclick=siteQ;
+async function aiQ(){const facts=($('sres').innerText||'').trim();if(facts.length<20||/查询中/.test(facts)){$('aires').textContent='请先点「查询」，等结果出来再点 AI 结论。';return}
+ $('aires').textContent='DeepSeek 分析中…';
+ try{const r=await fetch(WRPC+'/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:$('su').value.trim(),facts})});const j=await r.json().catch(()=>null);
+  $('aires').textContent=j&&j.t?j.t:('AI 暂时不可用：'+((j&&j.err)||('HTTP '+r.status+'，可能是今天免费额度用完，明早 8 点恢复')))}catch(e){$('aires').textContent='AI 暂时不可用（网络或今日额度用完，明早 8 点恢复）'}}
+$('aibtn').onclick=aiQ;$('su').onkeydown=e=>{if(e.key==='Enter')siteQ()};
+
+// ---------------------------------------------------------------- 合约安全检查
+const RISKY={"3ccfd60b":"withdraw()","2e1a7d4d":"withdraw(uint256)","853828b6":"withdrawAll()","db2e21bc":"emergencyWithdraw()","e086e5ec":"withdrawETH()","1d111d13":"withdrawBNB()","89476069":"withdrawToken(address)","49df728c":"withdrawTokens(address)","9e281a98":"withdrawToken(address,uint256)","4460d3cf":"rescueToken(address)","00ae3bf8":"rescueTokens(address)","33f3d628":"rescueToken(address,uint256)","8cd4426d":"rescueERC20(address,uint256)","8980f11f":"recoverERC20(address,uint256)","01681a62":"sweep(address)","a65c6326":"withdrawUnfilled()","6ff1c9bc":"emergencyWithdraw(address)","3659cfe6":"upgradeTo(address)","4f1ef286":"upgradeToAndCall(address,bytes)","b61d27f6":"execute(address,uint256,bytes)","51cff8d9":"withdraw(address)","f3fef3a3":"withdraw(address,uint256)","24600fc3":"withdrawFunds()","d294f093":"claimFees()"};
+const LIBP=/(openzeppelin|solady|solmate|forge-std|@chainlink|uniswap|pancake|\/lib\/|node_modules|erc721a)/i;
+const ROLE='(\\w*(owner|admin|treasury|dev|operator|team|deployer|governance|gov|manager|creator|feeRecipient|keeper|controller|signer|multisig)\\w*(\\(\\))?)';
+const PRIV_MOD=/\b(only\w+|auth|whenOwner|ownerOnly|adminOnly)\b/;
+const PRIV_BODY=new RegExp('(_checkOwner\\s*\\(|_checkRole\\s*\\(|hasRole\\s*\\(|msg\\.sender\\s*[!=]=\\s*'+ROLE+'|'+ROLE+'\\s*[!=]=\\s*msg\\.sender|_msgSender\\(\\)\\s*[!=]=\\s*'+ROLE+')','i');
+function funcs(src){const out=[];const re=/\bfunction\s+(\w+)\s*\(([^)]*)\)([^{;]*)\{/g;let m;while((m=re.exec(src))){let i=re.lastIndex,d=1;while(i<src.length&&d){const c=src[i];if(c==='{')d++;else if(c==='}')d--;i++}out.push([m[1],m[2],m[3],src.slice(re.lastIndex,i-1)])}return out}
+function analyse(sources){const own=Object.entries(sources).filter(([k])=>!LIBP.test(k));const all=(own.length?own:Object.entries(sources)).map(([k,v])=>(v.content||'').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/[^\n]*/g,'')).join('\n');
+ const isTok=/\b(ERC20|IERC20)\b/.test(all)&&/function\s+decimals|ERC20\s*\(/.test(all);const F=[];const seen=new Set();
+ for(const [name,params,mods,b] of funcs(all)){if(/\b(internal|private|view|pure)\b/.test(mods)||seen.has(name))continue;if(!(PRIV_MOD.test(mods)||PRIV_BODY.test(b.slice(0,600))))continue;seen.add(name);const fn=name+'()';
+  const pa=[...params.matchAll(/address\s+(\w+)/g)].map(x=>x[1]);
+  if(/\bselfdestruct\s*\(/.test(b))F.push(['高',fn+' 可销毁合约']);
+  if(/\bdelegatecall\b/.test(b)||/^upgrade/i.test(name))F.push(['高',fn+' 可升级/替换合约逻辑，等于随时能改规则']);
+  const arb=pa.length&&new RegExp('IERC20\\w*\\s*\\(\\s*('+pa.join('|')+')\\s*\\)').test(b)&&/(safeTransfer|\.transfer)\s*\(/.test(b);
+  if(arb)F.push(['高',fn+' 项目方可把合约里的任意代币（包括 USDT / LP 池子凭证）转走']);
+  else if(/(safeTransfer|\.transfer)\s*\(/.test(b)&&/balanceOf\s*\(\s*address\s*\(\s*this\s*\)/.test(b))F.push(['高',fn+' 项目方可把合约里某种代币全部转走（池子/募集资金）']);
+  else if(/(safeTransfer|\.transfer)\s*\(/.test(b)&&/(IERC20|token|lp|pair|usdt)/i.test(b))F.push(['中',fn+' 项目方可转出合约里的代币']);
+  if(/address\s*\(\s*this\s*\)\s*\.balance/.test(b)&&/(\.call\s*\{\s*value|\.transfer\s*\(|\.send\s*\(|sendValue)/.test(b))F.push(['中',fn+' 项目方可提走合约里全部 BNB（一般是 mint 收入）']);
+  else if(/(\.call\s*\{\s*value|sendValue\s*\()/.test(b))F.push(['中',fn+' 项目方可从合约转出 BNB']);
+  if(/\bremoveLiquidity/.test(b))F.push(['高',fn+' 项目方可撤池子（removeLiquidity）']);
+  if(isTok&&/\b_mint\s*\(/.test(b))F.push(/(MAX_SUPPLY|maxSupply|cap\b|CAP\b|>\s*\w*(MAX|max|Cap|cap)\w*)/.test(b)?['低',fn+' 指定地址可铸币，但有总量上限']:['高',fn+' 项目方可随时增发代币（没看到总量上限）']);
+  if(/(fee|tax)/i.test(name)&&/^set/i.test(name)&&!/require\s*\([^;]*<=?/.test(b))F.push(['中',fn+' 项目方可改收费/税率，代码里没看到上限']);
+  if(/(blacklist|blocklist|bot|freeze)/i.test(name))F.push(['中',fn+' 项目方可拉黑地址/冻结卖出'])}
+ return F}
+async function check(c){const r={c,verified:null,src:'',proxy:false,owner:'',ren:false,bnb:0,items:[],name:'',deployer:''};
+ const code=await rpc('eth_getCode',[c,'latest']).catch(()=> '');if(!code||code==='0x'){r.items=[['?','这个地址不是合约，或节点暂时查不到']];r.level='?';return r}
+ try{r.bnb=+(Number(BigInt(await rpc('eth_getBalance',[c,'latest'])))/1e18).toFixed(4)}catch(e){}
+ try{const o=await rpc('eth_call',[{to:c,data:'0x8da5cb5b'},'latest']);if(o&&o.length>=66){r.owner='0x'+o.slice(-40);r.ren=/^0x0{40}$/.test(r.owner)||r.owner==='0x000000000000000000000000000000000000dead'}}catch(e){}
+ for(const s of ['0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc','0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103']){try{const v=await rpc('eth_getStorageAt',[c,s,'latest']);if(v&&BigInt(v)>0n)r.proxy=true}catch(e){}}
+ if(r.proxy)r.items.push(['高','可升级代理合约：项目方能随时换掉合约代码（包括加提款后门）']);
+ let sf=null;try{const res=await fetch(`https://sourcify.dev/server/v2/contract/56/${c}?fields=sources,proxyResolution,compilation,deployment`);if(res.ok){const j=await res.json();if(j.match||j.runtimeMatch)sf=j}}catch(e){r.sferr=true}
+ if(sf){r.verified=true;r.src='Sourcify';r.name=(sf.compilation||{}).name||'';r.deployer=((sf.deployment||{}).deployer||'').toLowerCase();r.items.push(...analyse(sf.sources||{}));if((sf.proxyResolution||{}).isProxy&&!r.proxy){r.proxy=true;r.items.push(['高','可升级代理合约：项目方能随时换掉合约代码'])}}
+ else{r.verified=r.sferr?null:false;r.items.push(['高',r.verified===false?'没开源（Sourcify 查不到源码）：看不到代码，无法排除后门。可点 BscScan 再确认':'开源状态查不到（网络问题），请点 BscScan 人工看']);
+  for(const [sel,s] of Object.entries(RISKY))if(code.includes(sel))r.items.push([/^(withdraw\(\)|withdrawAll|withdrawFunds|withdrawETH|withdrawBNB|claimFees)/.test(s)?'中':'高','字节码里有 '+s+' 函数（项目方可能用它转走资金）'])}
+ if(r.ren&&r.items.length)r.items=r.items.map(([l,t])=>[l==='中'?'低':l,t+'（但 owner 已放弃）']);
+ if(!r.items.length)r.items.push(['低','没发现项目方能转走资金的函数']);
+ const ord={'高':0,'中':1,'?':2,'低':3};r.items=[...new Map(r.items.map(x=>[x[1],x])).values()].sort((a,b)=>ord[a[0]]-ord[b[0]]);r.level=r.items[0][0];return r}
+const LVT={'高':'高风险','中':'中风险','低':'低风险','?':'查不到'};
+
+// ---------------------------------------------------------------- 点击
+document.addEventListener('click',async e=>{
+ const cp=e.target.closest('[data-copy]');if(cp){navigator.clipboard.writeText(cp.dataset.copy).then(()=>toast('已复制'));return}
+ const b=e.target.closest('[data-check]');
+ if(b){const c=b.dataset.check,nm=b.dataset.name||'';modal(`<h3 style="margin:0 0 8px">${esc(nm)} 合约检查</h3><div class="m">正在查开源和提款权限…（5~20 秒）</div>`);
+  try{const r=await check(c);const v=r.verified===true?'<b class="g">✅ 已开源</b>（'+r.src+'）':(r.verified===false?'<b class="r">❌ 没开源</b>':'<b>? 查不到</b>');
+   const p=PMAP[c];
+   modal(`<h3 style="margin:0 0 6px">${esc(nm||r.name)} 合约检查 <span class="lv lv-${r.level}">${LVT[r.level]||r.level}</span></h3>
+   <div class="addr" style="margin-bottom:10px">${c}</div><div>开源：${v}</div><div>可升级（代理）合约：${r.proxy?'<b class=r>是</b>':'否'}</div>
+   <div>Owner：${r.owner?(r.ren?'<b class=g>已放弃</b>':'<span class=addr>'+r.owner+'</span>'+(OWNC[r.owner]>1?` <a class="wp" data-dev="${r.owner}">这个项目方发过 ${OWNC[r.owner]-1} 个其它项目</a>`:'')):'没有 owner() 函数'}</div>
+   ${r.deployer?`<div>部署者：<span class=addr>${r.deployer}</span></div>`:''}<div>合约里现在有：${r.bnb} BNB</div>
+   <h4 style="margin:14px 0 6px">能不能转走钱</h4>${r.items.map(([l,t])=>`<div style="margin:5px 0"><span class="lv lv-${l}">${l}</span>${esc(t)}</div>`).join('')}
+   <div class="m" style="margin-top:12px;font-size:12px">自动扫描只看常见后门写法，不等于审计；“高”的别碰，“中”的看清楚钱进谁口袋再说。</div>
+   <div style="margin-top:8px"><a class="lk" target="_blank" href="https://bscscan.com/address/${c}#code">BscScan 看代码</a> · <a class="lk" target="_blank" href="https://repo.sourcify.dev/56/${c}">Sourcify</a></div>`)}catch(err){modal('检查失败，可能网络不通，再点一次试试。')}return}
+ const dv=e.target.closest('[data-dev]');
+ if(dv){const o=dv.dataset.dev;const L=PROJ.filter(p=>p.o===o).sort((a,b)=>b.f-a.f);
+  modal(`<h3 style="margin:0 0 6px">这个项目方一共发过 ${L.length} 个项目</h3><div class="addr" style="margin-bottom:10px">项目方地址：${o} <a class="lk" target="_blank" href="https://bscscan.com/address/${o}">BscScan</a></div><div class="scroll"><table><thead><tr><th>项目</th><th>合约</th><th class="n">参与钱包</th><th>上线</th><th>免费/付费</th><th>官网</th><th></th></tr></thead>${L.map(p=>`<tr><td><b>${esc(p.n)}</b></td><td>${cbtn(p.c)}</td><td class="n">${p.w}</td><td class="m">${fmtT(p.f)}</td><td>${fpTag(p)}</td><td>${siteCell(p)}</td><td>${ckBtn(p.c,p.n)}</td></tr>`).join('')}</table></div><div class="m" style="font-size:12px;margin-top:8px">按合约 owner 地址统计，只算收录的 Agent ID 项目。同一地址发很多个，多半是发射平台。</div>`);return}
+ const wl=e.target.closest('[data-wal]');
+ if(wl){const w=wl.dataset.wal;modal('<div class="m">读取中…</div>');try{if(!CONTRACTS)CONTRACTS=await getJ('contracts.json');const shd=await getJ('w/'+w.slice(0,2)+'.json');const arr=shd[w]||[];const L=[];for(let i=0;i<arr.length;i+=2)L.push([CONTRACTS[arr[i]],arr[i+1]]);
+  for(const e2 of LIVE)if(e2.w===w&&!L.some(x=>x[0]===e2.c))L.push([e2.c,Math.floor(e2.t/60)]);L.sort((a,b)=>b[1]-a[1]);
+  const nm=HOLD.get(w)||(TOPW.find(x=>x.w===w)||{}).n||(FEED.find(x=>x.w===w)||{}).wn||'';
+  modal(`<h3 style="margin:0 0 6px">${esc(nm)||sh('0x'+w)} 打过 ${L.length} 个项目</h3><div class="addr" style="margin-bottom:10px">0x${w}</div><div class="scroll"><table>${L.map(([c,t])=>{const p=PMAP[c]||{c};return `<tr><td><b>${esc(p.n||sh(c))}</b></td><td>${cbtn(c)}</td><td>${fpTag(p)}</td><td class="m">${fmtT(t)}</td><td>${ckBtn(c,p.n)}</td></tr>`}).join('')}</table></div><div class="m" style="font-size:12px;margin-top:8px">统计范围：Agent ID 上线（10 月 19 日）以来收录到的 mint。</div>`)}catch(err){modal('读取失败，再试一次。')}}
+});
+loadAll();
+if(!/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent))setTimeout(startLive,1500);
+</script>
+</body></html>
